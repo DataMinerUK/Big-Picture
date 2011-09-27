@@ -1,0 +1,229 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>BigPicture</title>
+    <link type="text/css" href="css/ui-lightness/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
+    <link type="text/css" href="css/jquery.tweet.css" rel="stylesheet" />
+    	
+	<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+    <script type="text/javascript" src="js/jquery.tweet.js"></script>
+    <script type="text/javascript" src="js/jquery.jfeed.js"></script>
+    <script type="text/javascript" src="js/resources.js"></script>
+    <script type="text/javascript" src="js/video.js"></script>
+    <script src="http://staging.tokbox.com/v0.91/js/TB.min.js" ></script>
+	<style>
+	#tabs { height: 600px; } 
+	.tabs-bottom { position: relative; } 
+	.tabs-bottom .ui-tabs-panel { overflow: auto; } 
+	.tabs-bottom .ui-tabs-nav { position: absolute !important; left: 0; bottom: 0; right:0; padding: 0 0.2em 0.2em 0; } 
+	.tabs-bottom .ui-tabs-nav li { margin-top: -2px !important; margin-bottom: 1px !important; border-top: none; border-bottom-width: 1px; }
+	.ui-tabs-selected { margin-top: -3px !important; }
+	</style>
+    <script type="text/javascript">
+
+        var twitterQuery = "";
+        var role = "admin";
+        var room = 1;
+        var username;
+
+        $(function () {
+            $("#tabs").tabs();
+            $(".tabs-bottom .ui-tabs-nav, .tabs-bottom .ui-tabs-nav > *")
+			.removeClass("ui-corner-all ui-corner-top")
+			.addClass("ui-corner-bottom");
+
+            $("input:button").button();
+            $("#accordion").accordion({ header: "h3" });
+
+            room = gup('room');
+            role = gup('role');
+            username = gup('username');
+            twitterQuery = gup('topic');
+            $('#titleH').html("Big Picture: " + twitterQuery);
+
+            if (role != "admin") {
+                $('#tabAdmin').remove();
+                $('#tabs-3').remove();
+
+                $('#tabUList').remove();
+                $('#tabs-4').remove();
+
+            }
+
+            init_video();
+            init_resources();
+
+            $("#twitterdiv").tweet({
+                avatar_size: 32,
+                count: 10,
+                query: twitterQuery,
+                loading_text: "Loading..." /*,
+                refresh_interval: 20 */
+            });
+
+        });
+
+        function gup(name) {
+            name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+            var regexS = "[\\?&]" + name + "=([^&]*)";
+            var regex = new RegExp(regexS);
+            var results = regex.exec(window.location.href);
+            if (results == null)
+                return "";
+            else
+                return results[1];
+        }
+
+        function signalReceivedHandler(event) {
+            openURL('http://www.google.com');
+        }
+
+
+	</script>
+    <style>
+
+    </style>
+</head>
+<body>
+    <div id="okdialog" title="Suggest a URL" style="display: none;">
+        <p>Thanks for share this URL, the administrator will evaluted it.</p>
+    </div>
+    <div id="dialog" title="Suggest a URL" style="display: none;">
+	    <table>
+            <tr>
+                <td>Title:</td>
+                <td colspan="2"><input type="text" style="width: 300px;" id="title" cols="30" /></td>
+            </tr>
+            <tr>
+                <td>Description:</td>
+                <td colspan="2"><textarea rows="2" style="width: 300px;" id="description"></textarea></td>
+            </tr>
+            <tr>
+                <td>URL:</td>
+                <td colspan="2"><input type="text" style="width: 300px;" id="urlR" /></td>
+            </tr>
+        </table>
+    </div>    
+    <table style="height: 100%;width:100%;">
+        <tr>
+            <td>
+                <h1><div id="titleH">Big Picture: Discussion title</div></h1>
+            </td>
+            <td rowspan="2" style="width: 75%;vertical-align: top;">
+		        <div id="tabs" class="tabs-bottom">
+			        <ul>
+				        <li><a href="#tabs-0">Main View</a></li>
+				        <li><a href="#tabs-1">Big Bucket</a></li>
+				        <li><a href="#tabs-2">Social</a></li>
+				        <li id="tabAdmin"><a href="#tabs-3">Admin</a></li>
+				        <li id="tabUList"><a href="#tabs-4">User List</a></li>
+                        
+			        </ul>
+			        <div id="tabs-0" style="height: 540px;">
+                        <iframe id="mainV" src="about:blank" style="height: 540px; width: 100%;overflow: auto;border: 0 none;">                                
+                        </iframe>
+                    </div>
+			        <div id="tabs-1" style="height: 540px;">
+                        <p style="text-align: right;"><input type="button" value="Suggest a URL" onClick="javascript:suggest_resource()" /></p>
+                        <div id="resourcesdiv" style="width: 100%;overflow: auto;">                                
+                                <ul id="resourceslist" class="tweet_list">
+                                    
+                                </ul>
+                        </div>
+                    </div>
+			        <div id="tabs-2" style="height: 600px;"><div id="twitterdiv" style="height: 540px; width: 100%;overflow: auto;"></div></div>
+
+			        <div id="tabs-3"><div style="width: 480px;">                            
+                            <br />
+                            <table>
+                                <tr>
+                                    <td>
+                                        <b>Controls:</b>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <p>
+       	                                    <input type="button" value="Connect" id ="connectLink" onClick="javascript:connect()" />&nbsp;
+       	                                    <input type="button" value="Disconnect" id ="disconnectLink" onClick="javascript:disconnect()" />&nbsp;                                        
+       	                                    <input type="button" value="Start Publishing" id ="publishLink" onClick="javascript:startPublishing()" />&nbsp;
+       	                                    <input type="button" value="Stop Publishing" id ="unpublishLink" onClick="javascript:stopPublishing()" />&nbsp;
+                                            <input type="button" value="Camera Settings" id ="toggleDevicePanelLink" onClick="javascript:toggleDevicePanel()" />
+                                        </p><p>
+       	                                    <input type="button" value="Record" id ="recordLink" onClick="javascript:record_video()" />&nbsp;
+       	                                    <input type="button" value="Stop Record" id ="stopLink" onClick="javascript:stop_video()" />&nbsp;
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+			                            <div id="devicePanelContainer">
+				                            <div id="devicePanelCloseButton">
+					                            <a href="#" onClick="javascript:toggleDevicePanel()" class="settingsClose"></a>
+				                            </div>
+				                            <div id="devicePanelBackground">
+					                            <div id="devicePanelInset"></div>
+				                            </div>
+			                            </div>                                    
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                    
+                                    </td>
+                                </tr>
+                                <!--
+                                <tr>
+                                    <td>
+                                    <b>Effect:</b>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>                                    
+                                        <input type="button" value="Apply Changes" onClick="javascript:signal()" />&nbsp;
+                                    </td>
+                                </tr>-->
+                            </table>
+                    </div>
+                    
+                    </div>
+                    <div id="tabs-4">
+                        <div style="height: 386px; width: 100%;">                            
+                            <br />
+                            <table style="width: 100%;">
+                                <tr>
+                                    <td>
+                                        <b>Users:</b>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <ul id="userslist" class="tweet_list">
+                                        </ul>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+		        </div>
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 25%;vertical-align: top;">
+		        <div id="accordion" style="height: 100%;">
+			        <div style="height: 100%;">
+				        <h3><a href="#">Big Picture</a></h3>
+				        <div>                      
+                            <div id="myCamera" style="border-color: White; height: 1px; width: 1px;"></div>
+                            <div id="subscribers" style="height: 380px; width: 100%;background-color: Black;"></div>                        
+                        </div>
+                        <div id="videoStatus"></div>
+			        </div>
+		        </div>
+            </td>
+        </tr>
+
+    </table>
+</body>
+</html>
