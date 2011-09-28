@@ -11,7 +11,7 @@ var deviceManager;
 var devicePanel;
 var panelShowing = false;
 
-function init_video(){
+function init_video() {
     $("#videoStatus").html("Status: Not connected.");
     show('connectLink');
     hide('disconnectLink');
@@ -19,7 +19,7 @@ function init_video(){
     hide('unpublishLink');
     hide('recordLink');
     hide('stopLink');
-        
+
     if (TB.checkSystemRequirements() != TB.HAS_REQUIREMENTS) {
         alert('Minimum System Requirements not met!');
     } else {
@@ -35,6 +35,7 @@ function init_video(){
 
         session.addEventListener('sessionRecordingStopped', sessionRecordingStoppedHandler);
         session.addEventListener('archiveCreated', archiveCreatedHandler);
+        session.addEventListener('archiveLoaded', archiveLoadedHandler);
 
         connect();
     };
@@ -42,8 +43,7 @@ function init_video(){
 }
 
 function connect() {
-    var sessionConnectProperties = { connectionData: username };
-    session.connect(apiKey, token, sessionConnectProperties);
+    session.connect(apiKey, token);
 }
 
 function disconnect() {
@@ -56,42 +56,15 @@ function disconnect() {
 }
 
 // Called when user wants to start publishing to the session
-
-
 function startPublishing() {
     if (!publisher) {
-        var parentDiv = document.getElementById("myCameraINV");
+        var parentDiv = document.getElementById("myCamera");
         var publisherDiv = document.createElement('div'); // Create a div for the publisher to replace
         publisherDiv.setAttribute('id', 'opentok_publisher');
         parentDiv.appendChild(publisherDiv);
         publisher = session.publish(publisherDiv.id); // Pass the replacement div id to the publish method
         show('unpublishLink');
         hide('publishLink');
-    }
-}
-
-function startPublishingINT(){
-    $("#dialoginvite").dialog({
-        resizable: false,
-        height: 350,
-        width: 450,
-        buttons: {
-            'Stop': function () {
-                $(this).dialog("close");
-                stopPublishing()
-            }
-        }
-    });
-    startPublishing();
-}
-
-function startPublishingInvite() {
-    if (!publisher) {
-        var parentDiv = document.getElementById("myCameraINV");
-        var publisherDiv = document.createElement('div'); // Create a div for the publisher to replace
-        publisherDiv.setAttribute('id', 'opentok_publisher');
-        parentDiv.appendChild(publisherDiv);
-        publisher = session.publish(publisherDiv.id); // Pass the replacement div id to the publish method
     }
 }
 
@@ -105,10 +78,20 @@ function stopPublishing() {
     hide('unpublishLink');
 }
 
+function archiveLoadedHandler(event) {
+    //session.addEventListener('playbackStopped', playbackStoppedHandler);
+    session.addEventListener('streamCreated', streamCreatedHandler);
+    archive = event.archives[0];
+    archive.startPlayback();
+}
+
 function sessionConnectedHandler(event) {
+    //session.createArchive(apiKey, 'perSession');
+    session.loadArchive(archiveIDD);
+
     for (var j = 0; j < event.connections.length; j++) {
         var currenthtml = "<li id='" + event.connections[j].connectionId + "'>" +
-                               event.connections[j].data + "<br />" +
+                               event.connections[j].connectionId + "<br />" +
                                "<p style='text-align: right;'><input type='button' value='Request video' onclick='javascript:request_video(\"" + event.connections[j].connectionId + "\")' />&nbsp;<input type='button' value='Disconnect Video' onclick='javascript:disconnect_video(\"" + event.connections[j].connectionId + "\")' /></p>" +
                                 "</li>";
         $("#userslist").append(currenthtml);
@@ -136,9 +119,7 @@ function sessionConnectedHandler(event) {
 function archiveCreatedHandler(event) {
     archive = event.archives[0];
     archiveId = archive.archiveId;
-
-    session.startRecording(archive);
-
+    alert("Archive created. " + archiveId);
 }
 
 function streamCreatedHandler(event) {
@@ -197,7 +178,7 @@ function exceptionHandler(event) {
 function addStream(stream) {
     // Check if this is the stream that I am publishing, and if so do not publish.
     if (stream.connection.connectionId == session.connection.connectionId) {
-        //return;
+        return;
     }
     var subscriberDiv = document.createElement('div'); // Create a div for the subscriber to replace
     //subscriberDiv.style.MozTransform = 'rotate(15deg)';
@@ -248,9 +229,11 @@ function toggleDevicePanel() {
 }
 
 function stop_video() {
+    archive = { archiveId: '8658037c-81d8-4740-a9c0-284535e27fae' };
+
     session.stopRecording(archive);
-    session.closeArchive(archive);
-    $('#recordStatus').html("Recording ID: " + archive.archiveId + "<br /><a href='player.htm?room=" + room + "&role=guest&topic=" + twitterQuery + "&username=" + username + "&code=" + archive.archiveId + "'>Link</a>");
+    $('#titleH').html("Big Picture: " + archive.archiveId);
+    archive = null;
 
     show('recordLink');
     hide('stopLink');
@@ -258,25 +241,20 @@ function stop_video() {
 
 function sessionRecordingStoppedHandler(event) {
     session.addEventListener("archiveClosed", archiveClosedHandler);
+
+    alert('ok');
 }
 
 function record_video() {
     hide('recordLink');
     show('stopLink');
 
-    //archive = { archiveId: '522dcfa0-ddf4-446c-b9ee-89c06f3264fc' };
-    //session.startRecording(archive);
-
-    archive = session.createArchive(apiKey, 'perSession');
+    archive = { archiveId: '8658037c-81d8-4740-a9c0-284535e27fae' };
+    session.startRecording(archive); 
 }
 
 function request_video(id) {
-    $.ajax({
-        url: "setMain.ashx?urlR=INVITE;" + id,
-        success: function () {
-            session.signal();
-        }
-    });
+
 }
 
 function disconnect_video(id) {

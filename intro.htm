@@ -16,29 +16,58 @@
             text-align: center;
         }
     </style>
+    <script type="text/javascript">
+
+        $(function () {
+            $("#dialog").dialog({
+                resizable: false,
+                modal: true,
+                resizable: false,
+                draggable: false,
+                height: 350,
+                width: 450,
+                buttons: {
+                    Ok: function () {
+                        window.location = "index.htm?room=" + $('#room')[0].selectedIndex + "&role=" + $('#role')[0].value + "&topic=" + $('#room')[0].value + "&username=" + $('#username')[0].value + ""
+                    }
+                }
+            });
+        });
+    </script>
 </head>
 <body>
-    <h1>Big Picture</h1>
-    <table class="style1">
-        <tr>
-            <td>
-                &nbsp;</td>
-            <td>
-                &nbsp;</td>
-        </tr>
-        <tr>
-            <td class="style2">
-                <a href="index.htm?room=1&amp;role=guest&amp;topic=#hacktoberfest&amp;username=user">Room 1 - Guest (Live)</a></td>
-            <td class="style2">
-                <a href="index.htm?room=1&amp;role=admin&amp;topic=#hacktoberfest&amp;username=user">&nbsp;Room 1- Admin&nbsp;</a></td>
-        </tr>
-        <tr>
-            <td class="style2">
-                <a href="player.htm?room=1&amp;topic=#hacktoberfest&amp;username=user">Room 1 - Guest (Recorded Session)</a></td>
-            <td class="style2"></td>
-        </tr>
-
-    </table>
-
+    <div id="dialog" title="Big Picture" style="display: none;">
+	    <table>
+            <tr>
+                <td>Name:</td>
+                <td colspan="2"><input type="text" style="width: 300px;" id="username" cols="30" /></td>
+            </tr>
+            <tr>
+                <td>Profile:</td>
+                <td colspan="2"><textarea rows="2" style="width: 300px;" id="profile"></textarea></td>
+            </tr>
+            <tr>
+                <td>Room:</td>
+                <td colspan="2">
+                    <select id="room">
+                        <option value="#hacktoberfest">Room 1 - #hacktoberfest</option>
+                        <option value="#hacktoberfest">Room 2</option>
+                        <option value="#hacktoberfest">Room 3</option>
+                        <option value="#hacktoberfest">Room 4</option>
+                        <option value="#hacktoberfest">Room 5</option>
+                        <option value="#hacktoberfest">Room 6</option>
+                    </select></td>
+            </tr>
+            <tr>
+                <td>Role:</td>
+                <td colspan="2">
+                    <select id="role">
+                        <option value="guest">Guest</option>
+                        <option value="admin">Administrator</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+    </div>    
 </body>
 </html>

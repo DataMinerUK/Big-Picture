@@ -1,5 +1,5 @@
-function init_resources() {
-    loop_update_resources();    
+﻿function init_resources() {
+    update_resources();
 }
 
 function openURL(urlink ) {
@@ -7,23 +7,61 @@ function openURL(urlink ) {
     $("#mainV")[0].src = urlink;
 }
 
+function make_main(urlLink) {
+    $.ajax({
+        url: "setMain.ashx?urlR=WEB;" + urlLink,
+        success: function () {
+            session.signal();
+        }
+    });
+}
+
+function signalReceivedHandler(event) {
+    $.ajax({
+        url: "setMain.ashx",
+        success: function (data) {
+            if (data.split(";")[0] == "WEB") {
+                openURL(data.split(";")[1]);
+            }
+            if (data.split(";")[0] == "UPDATE") {
+                update_resources();
+            }
+            if (data.split(";")[0] == "INVITE") {
+                if (session.connection.connectionId == data.split(";")[1]) {
+                    $("#dialoginvite").dialog({
+                        resizable: false,
+                        height: 350,
+                        width: 450,
+                        buttons: {
+                            Ok: function () {
+                                $(this).dialog("close");
+                                stopPublishing()
+                            }
+                        }
+                    });
+                    startPublishingInvite();
+                }
+            }
+        }
+    });
+}
+
 function update_resources() {
-     $.ajax({
-        url: "http://pipes.yahoo.com/pipes/pipe.run?_id=2c07ef10e470d2641c57d0e492121db5&_render=json&role=" + role + "&room=" + room,
-        dataType: 'json',
-        //url: "http://184.72.38.228/MoJo/Resources.ashx?room=" + room + "&cmd=list&role=" + role,
+    $.ajax({
+        url: "Resources.ashx?room=" + room + "&cmd=list&role=" + role,
+        dataType: "json",
         success: function (feed) {
             var html = "";
-            $(feed.value.items).each(function () {
+            $(feed.items).each(function () {
                 var item = $(this)[0];
                 var currenthtml = "";
 
-                if (item.updated == "") {
+                if (item.status == "pending") {
                     currenthtml = "<li class='new' id='" + item.id + "'>" +
                                "<a class='tweet_avatar' href='#' onclick='javascript:openURL(\"" + item.link + "\");'><img src='./temp/" + item.id + ".jpg' width='128' height='96' border='1'/></a>" +
                                "<a href='#' onclick='javascript:openURL(\"" + item.link + "\");'>" + item.title + "</a><br />" +
                                "<span class='tweet_text'>" + item.description + "</span>" +
-                               "<p style='text-align: right;'><input type='button' value='Delete' onclick='javascript:delete_resources(\"" + item.id + "\")' />&nbsp;<input type='button' value='Approve' onclick='javascript:approve_resources(\"" + item.id + "\")' />&nbsp;<input type='button' value='Set in main view' onclick='javascript:main_resources(\"" + item.link + "\")' /></p>" +
+                               "<p style='text-align: right;'><input type='button' value='Delete' onclick='javascript:delete_resources(\"" + item.id + "\")' />&nbsp;<input type='button' value='Approve' onclick='javascript:approve_resources(\"" + item.id + "\")' />&nbsp;<input type='button' value='Set in main view' onclick='javascript:make_main(\"" + item.link + "\")' /></p>" +
                                "</li>";
                 } else {
                     if (role == "admin") {
@@ -31,7 +69,7 @@ function update_resources() {
                                "<a class='tweet_avatar' href='#' onclick='javascript:openURL(\"" + item.link + "\");'><img src='./temp/" + item.id + ".jpg' width='128' height='96' border='1'/></a>" +
                                "<a href='#' onclick='javascript:openURL(\"" + item.link + "\");'>" + item.title + "</a><br />" +
                                "<span class='tweet_text'>" + item.description + "</span>" +
-                               "<p style='text-align: right;'><input type='button' value='Delete' onclick='javascript:delete_resources(\"" + item.id + "\")' />&nbsp;<input type='button' value='Set in main view' onclick='javascript:main_resources(\"" + item.link + "\")' /></p>" +
+                               "<p style='text-align: right;'><input type='button' value='Delete' onclick='javascript:delete_resources(\"" + item.id + "\")' />&nbsp;<input type='button' value='Set in main view' onclick='javascript:make_main(\"" + item.link + "\")' /></p>" +
                                "</li>";
                     } else {
                         currenthtml = "<li class='new' id='" + item.id + "'>" +
@@ -82,14 +120,19 @@ function suggest_resource() {
         buttons: {
             Ok: function () {
                 $.ajax({
-                    url: "http://184.72.38.228/MoJo/Resources.ashx?room=" + room + "&cmd=add&title=" + $("#title")[0].value + "&description=" + $("#description")[0].value + "&urlR=" + $("#urlR")[0].value + "&role=" + role,
+                    url: "Resources.ashx?room=" + room + "&cmd=add&title=" + $("#title")[0].value + "&description=" + $("#description")[0].value + "&urlR=" + $("#urlR")[0].value + "&role=" + role,
                     success: function () {
                         $("#okdialog").dialog({
                             resizable: false,
                             buttons: {                                
                                 Ok: function () {
-                                    $(this).dialog("close");                                    
-                                    update_resources();
+                                    $(this).dialog("close");
+                                    $.ajax({
+                                        url: "setMain.ashx?urlR=UPDATE;",
+                                        success: function () {
+                                            session.signal();
+                                        }
+                                    });
                                 }
                             }
                         });
@@ -104,26 +147,33 @@ function suggest_resource() {
     });
 }
 
-function main_resources(urlink){
-    session.signal();
-}
 
 function delete_resources(id) {
     $.ajax({
-        url: "http://184.72.38.228/MoJo/Resources.ashx?room=" + room + "&cmd=delete&id=" + id + "&role=" + role,
+        url: "Resources.ashx?room=" + room + "&cmd=delete&id=" + id + "&role=" + role,
         success: function () {
             $("#resourceslist").children('#' + id).remove();
-            update_resources();
+            $.ajax({
+                url: "setMain.ashx?urlR=UPDATE;",
+                success: function () {
+                    session.signal();
+                }
+            });
         }
     });
 }
 
 function approve_resources(id) {
     $.ajax({
-        url: "http://184.72.38.228/MoJo/Resources.ashx?room=" + room + "&cmd=approve&id=" + id + "&role=" + role,
+        url: "Resources.ashx?room=" + room + "&cmd=approve&id=" + id + "&role=" + role,
         success: function () {
             $("#resourceslist").children('#' + id).remove();
-            update_resources();
+            $.ajax({
+                url: "setMain.ashx?urlR=UPDATE;",
+                success: function () {
+                    session.signal();
+                }
+            });
         }
     });
 }
