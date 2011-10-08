@@ -1,4 +1,6 @@
-﻿function init_resources() {
+﻿var endpoint = "http://184.72.38.228/MoJo/";
+
+function init_resources() {
     update_resources();
 }
 
@@ -9,7 +11,8 @@ function openURL(urlink ) {
 
 function make_main(urlLink) {
     $.ajax({
-        url: "setMain.ashx?urlR=WEB;" + urlLink,
+        url: endpoint + "setMain.ashx?urlR=WEB;" + urlLink,
+        dataType: 'jsonp',
         success: function () {
             session.signal();
         }
@@ -18,7 +21,8 @@ function make_main(urlLink) {
 
 function signalReceivedHandler(event) {
     $.ajax({
-        url: "setMain.ashx",
+        url: endpoint + "setMain.ashx",
+        dataType: 'jsonp',
         success: function (data) {
             if (data.split(";")[0] == "WEB") {
                 openURL(data.split(";")[1]);
@@ -48,8 +52,8 @@ function signalReceivedHandler(event) {
 
 function update_resources() {
     $.ajax({
-        url: "Resources.ashx?room=" + room + "&cmd=list&role=" + role,
-        dataType: "json",
+        url: endpoint + "Resources.ashx?room=" + room + "&cmd=list&role=" + role,
+        dataType: 'jsonp',
         success: function (feed) {
             var html = "";
             $(feed.items).each(function () {
@@ -58,7 +62,7 @@ function update_resources() {
 
                 if (item.status == "pending") {
                     currenthtml = "<li class='new' id='" + item.id + "'>" +
-                               "<a class='tweet_avatar' href='#' onclick='javascript:openURL(\"" + item.link + "\");'><img src='./temp/" + item.id + ".jpg' width='128' height='96' border='1'/></a>" +
+                               "<a class='tweet_avatar' href='#' onclick='javascript:openURL(\"" + item.link + "\");'><img src='" + endpoint + "temp/" + item.id + ".jpg' width='128' height='96' border='1'/></a>" +
                                "<a href='#' onclick='javascript:openURL(\"" + item.link + "\");'>" + item.title + "</a><br />" +
                                "<span class='tweet_text'>" + item.description + "</span>" +
                                "<p style='text-align: right;'><input type='button' value='Delete' onclick='javascript:delete_resources(\"" + item.id + "\")' />&nbsp;<input type='button' value='Approve' onclick='javascript:approve_resources(\"" + item.id + "\")' />&nbsp;<input type='button' value='Set in main view' onclick='javascript:make_main(\"" + item.link + "\")' /></p>" +
@@ -66,14 +70,14 @@ function update_resources() {
                 } else {
                     if (role == "admin") {
                         currenthtml = "<li class='new' id='" + item.id + "'>" +
-                               "<a class='tweet_avatar' href='#' onclick='javascript:openURL(\"" + item.link + "\");'><img src='./temp/" + item.id + ".jpg' width='128' height='96' border='1'/></a>" +
+                               "<a class='tweet_avatar' href='#' onclick='javascript:openURL(\"" + item.link + "\");'><img src='" + endpoint + "temp/" + item.id + ".jpg' width='128' height='96' border='1'/></a>" +
                                "<a href='#' onclick='javascript:openURL(\"" + item.link + "\");'>" + item.title + "</a><br />" +
                                "<span class='tweet_text'>" + item.description + "</span>" +
                                "<p style='text-align: right;'><input type='button' value='Delete' onclick='javascript:delete_resources(\"" + item.id + "\")' />&nbsp;<input type='button' value='Set in main view' onclick='javascript:make_main(\"" + item.link + "\")' /></p>" +
                                "</li>";
                     } else {
                         currenthtml = "<li class='new' id='" + item.id + "'>" +
-                               "<a class='tweet_avatar' href='#' onclick='javascript:openURL(\"" + item.link + "\");'><img src='./temp/" + item.id + ".jpg' width='128' height='96' border='1'/></a>" +
+                               "<a class='tweet_avatar' href='#' onclick='javascript:openURL(\"" + item.link + "\");'><img src='" + endpoint + "/temp/" + item.id + ".jpg' width='128' height='96' border='1'/></a>" +
                                "<a href='#' onclick='javascript:openURL(\"" + item.link + "\");'>" + item.title + "</a><br />" +
                                "<span class='tweet_text'>" + item.description + "</span>" +
                                "</li>";
@@ -120,7 +124,8 @@ function suggest_resource() {
         buttons: {
             Ok: function () {
                 $.ajax({
-                    url: "Resources.ashx?room=" + room + "&cmd=add&title=" + $("#title")[0].value + "&description=" + $("#description")[0].value + "&urlR=" + $("#urlR")[0].value + "&role=" + role,
+                    url: endpoint + "Resources.ashx?room=" + room + "&cmd=add&title=" + $("#title")[0].value + "&description=" + $("#description")[0].value + "&urlR=" + $("#urlR")[0].value + "&role=" + role,
+                    dataType: 'jsonp',
                     success: function () {
                         $("#okdialog").dialog({
                             resizable: false,
@@ -128,7 +133,8 @@ function suggest_resource() {
                                 Ok: function () {
                                     $(this).dialog("close");
                                     $.ajax({
-                                        url: "setMain.ashx?urlR=UPDATE;",
+                                        url: endpoint + "setMain.ashx?urlR=UPDATE;",
+                                        dataType: 'jsonp',
                                         success: function () {
                                             session.signal();
                                         }
@@ -150,11 +156,13 @@ function suggest_resource() {
 
 function delete_resources(id) {
     $.ajax({
-        url: "Resources.ashx?room=" + room + "&cmd=delete&id=" + id + "&role=" + role,
+        url: endpoint + "Resources.ashx?room=" + room + "&cmd=delete&id=" + id + "&role=" + role,
+        dataType: 'jsonp',
         success: function () {
             $("#resourceslist").children('#' + id).remove();
             $.ajax({
-                url: "setMain.ashx?urlR=UPDATE;",
+                url: endpoint + "setMain.ashx?urlR=UPDATE;",
+                dataType: 'jsonp',
                 success: function () {
                     session.signal();
                 }
@@ -165,11 +173,13 @@ function delete_resources(id) {
 
 function approve_resources(id) {
     $.ajax({
-        url: "Resources.ashx?room=" + room + "&cmd=approve&id=" + id + "&role=" + role,
+        url: endpoint + "Resources.ashx?room=" + room + "&cmd=approve&id=" + id + "&role=" + role,
+        dataType: 'jsonp',
         success: function () {
             $("#resourceslist").children('#' + id).remove();
             $.ajax({
-                url: "setMain.ashx?urlR=UPDATE;",
+                url: endpoint + "setMain.ashx?urlR=UPDATE;",
+                dataType: 'jsonp',
                 success: function () {
                     session.signal();
                 }

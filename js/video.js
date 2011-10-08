@@ -272,7 +272,8 @@ function record_video() {
 
 function request_video(id) {
     $.ajax({
-        url: "setMain.ashx?urlR=INVITE;" + id,
+        url: endpoint + "setMain.ashx?urlR=INVITE;" + id,
+        dataType: 'jsonp',
         success: function () {
             session.signal();
         }
